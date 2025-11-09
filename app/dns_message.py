@@ -42,7 +42,7 @@ class DNSQuestion:
         labels = self.domain_name.split('.')
         encoded_name = b''
         for label in labels:
-            encoded_name += len(label).to_bytes(byteorder="big")
+            encoded_name += len(label).to_bytes(1, byteorder="big")
             encoded_name += bytes(label, encoding='utf-8')
         encoded_name += b'\x00'
         return encoded_name

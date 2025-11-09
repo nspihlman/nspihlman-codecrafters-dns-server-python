@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class DNS_Header:
+class DNSHeader:
     packet_id: int
     qr: int
     op_code: int = 0
@@ -32,8 +32,34 @@ class DNS_Header:
         header = (header << 16) | self.arcount
         return header.to_bytes(12, byteorder="big")
 
+@dataclass
+class DNSQuestion:
+    domain_name: str  # Domain Name 
+    r_type: int = 1 # Record Type
+    d_class: int = 1 # Domain Class 
+
+    def __encode_domain_name__(self):
+        labels = self.domain_name.split('.')
+        encoded_name = b''
+        for label in labels:
+            encoded_name += len(label).to_bytes(byteorder="big")
+            encoded_name += bytes(label, encoding='utf-8')
+        encoded_name += b'\x00'
+        return encoded_name
+
+    def to_bytes(self):
+        question = self.__encode_domain_name__()
+        question += self.r_type.to_bytes(2, byteorder="big")
+        question += self.d_class.to_bytes(2, byteorder="big")
+        return question
+    
+
 
 @dataclass
-class DNS_Message:
-    header: DNS_Header
+class DNSMessage:
+    header: DNSHeader
+    question: DNSQuestion
+
+    def to_bytes(self):
+        return self.header.to_bytes() + self.question.to_bytes()
     

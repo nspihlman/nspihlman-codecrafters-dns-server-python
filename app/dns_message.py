@@ -1,7 +1,7 @@
-from dataclass import dataclass
+from dataclasses import dataclass
 
 @dataclass
-class DNS_Header():
+class DNS_Header:
     packet_id: int
     qr: int
     op_code: int = 0
@@ -30,10 +30,10 @@ class DNS_Header():
         header = (header << 16) | self.ancount
         header = (header << 16) | self.nscount
         header = (header << 16) | self.arcount
-        return header.to_bytes(12, byteorder='big')
+        return header.to_bytes(12, byteorder="big")
 
 
 @dataclass
-class DNS_Message():
-    DNS_Header header
-    ...
+class DNS_Message:
+    header: DNS_Header
+    

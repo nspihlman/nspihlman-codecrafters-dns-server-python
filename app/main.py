@@ -1,5 +1,5 @@
 import socket
-import DNS_Header
+from app.dns_message import DNS_Header
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.

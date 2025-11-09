@@ -1,5 +1,5 @@
 import socket
-
+import DNS_Header
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -14,9 +14,9 @@ def main():
         try:
             buf, source = udp_socket.recvfrom(512)
 
-            response = b""
+            response = DNS_Header(packet_id=1234, qr=1)
 
-            udp_socket.sendto(response, source)
+            udp_socket.sendto(response.to_bytes(), source)
         except Exception as e:
             print(f"Error receiving data: {e}")
             break

@@ -1,5 +1,5 @@
 import socket
-from app.dns_message import DNSMessage, DNSHeader, DNSQuestion
+from app.dns_message import DNSMessage, DNSHeader, DNSQuestion, DNSAnswer
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -13,7 +13,10 @@ def main():
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
-            response = DNSMessage(DNSHeader(packet_id=1234, qr=1, qdcount=1), DNSQuestion(domain_name='codecrafters.io'))
+            response = DNSMessage(
+                DNSHeader(packet_id=1234, qr=1, qdcount=1, ancount=1), 
+                DNSQuestion(domain_name='codecrafters.io'),
+                DNSAnswer(domain_name='codecrafters.io'))
 
             udp_socket.sendto(response.to_bytes(), source)
         except Exception as e:

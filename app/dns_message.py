@@ -44,14 +44,15 @@ class DNSQuestion:
         question += self.d_class.to_bytes(2, byteorder="big")
         return question
     
+
 @dataclass
 class DNSAnswer:
     domain_name: str  # Domain Name
+    data: list[int]  # data specific to the record type. For now it'll hold an IP address
     r_type: int = 1  # Record Type
     d_class: int = 1  # Domain Class
     ttl: int  = 3600  # Duration in seconds that a recoed can be cached before requerying
     length: int = 4  # length of the RDATA field in bytes
-    data: list[int] = [8,8,8,8]  # data specific to the record type. For now it'll hold an IP address
 
     def to_bytes(self):
         answer = encode_domain_name(self.domain_name)

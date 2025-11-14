@@ -16,7 +16,7 @@ def main():
             response = DNSMessage(
                 DNSHeader(packet_id=1234, qr=1, qdcount=1, ancount=1), 
                 DNSQuestion(domain_name='codecrafters.io'),
-                DNSAnswer(domain_name='codecrafters.io'))
+                DNSAnswer(domain_name='codecrafters.io', data=[8,8,8,8]))
 
             udp_socket.sendto(response.to_bytes(), source)
         except Exception as e:

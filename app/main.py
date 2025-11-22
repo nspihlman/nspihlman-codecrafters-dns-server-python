@@ -13,10 +13,16 @@ def main():
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
-            response = DNSMessage(
-                DNSHeader(packet_id=1234, qr=1, qdcount=1, ancount=1), 
-                DNSQuestion(domain_name='codecrafters.io'),
-                DNSAnswer(domain_name='codecrafters.io', data=[8,8,8,8]))
+            user_message = DNSMessage.from_buffer(buf)
+            response = DNSMessage.respond_to_query(user_message)
+            # response = DNSMessage(
+            #     DNSHeader(
+            #         packet_id=user_message.header.packet_id, 
+            #         qr=1, 
+            #         qdcount=1, 
+            #         ancount=1), 
+            #     DNSQuestion(domain_name='codecrafters.io'),
+            #     DNSAnswer(domain_name='codecrafters.io', data=[8,8,8,8]))
 
             udp_socket.sendto(response.to_bytes(), source)
         except Exception as e:

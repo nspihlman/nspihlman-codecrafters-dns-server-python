@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import struct
 
 @dataclass
 class DNSHeader:
@@ -31,6 +32,35 @@ class DNSHeader:
         header = (header << 16) | self.nscount
         header = (header << 16) | self.arcount
         return header.to_bytes(12, byteorder="big")
+    
+    @classmethod
+    def from_buffer(cls, buffer):
+        # bytes 0 and 1 are the packet_id
+        # 
+        id, flags, qd, an, ns, ar = struct.unpack("!HHHHHH", buffer[:12])
+        qr     = (flags >> 15) & 0x1
+        opcode = (flags >> 11) & 0xF
+        aa     = (flags >> 10) & 0x1
+        tc     = (flags >> 9)  & 0x1
+        rd     = (flags >> 8)  & 0x1
+        ra     = (flags >> 7)  & 0x1
+        z      = (flags >> 4)  & 0x7
+        rcode  = flags & 0xF
+
+        return cls(packet_id=id, qr=qr, op_code=opcode, aa=aa, tc=tc, rd=rd, 
+                   ra=ra, z = z, rcode=rcode, qdcount=qd, ancount=an, nscount=ns, arcount=ar)
+    
+    @classmethod
+    def respond_to_query(cls, header):
+        # Header is type DNSHeader
+        return cls(
+            packet_id=header.packet_id, 
+            qr=1, 
+            op_code=header.op_code, 
+            rd=header.rd, 
+            rcode=0 if header.op_code == 0 else 4,
+            qdcount=header.qdcount,
+            ancount=1)
 
 @dataclass
 class DNSQuestion:
@@ -73,6 +103,14 @@ class DNSMessage:
     def to_bytes(self):
         return self.header.to_bytes() + self.question.to_bytes() + self.answer.to_bytes()
     
+    @classmethod
+    def from_buffer(cls, buffer):
+        return cls(header=DNSHeader.from_buffer(buffer), question=DNSQuestion("codecrafters.io"), answer=DNSAnswer("codecrafters.io", [8,8,8,8]))
+    
+    @classmethod
+    def respond_to_query(cls, query):
+        # Query is type DNSMessage
+        return cls(header=DNSHeader.respond_to_query(query.header), question=DNSQuestion("codecrafters.io"), answer=DNSAnswer("codecrafters.io", [8,8,8,8]))
 
 def encode_domain_name(name: str):
     labels = name.split('.')

@@ -74,6 +74,21 @@ class DNSQuestion:
         question += self.d_class.to_bytes(2, byteorder="big")
         return question
     
+    @classmethod
+    def from_bytes(cls, buffer: bytes):
+        cursor = 12  # starting place in the buffer
+        label_length = buffer[cursor]
+        domain_name = ""
+        while(label_length != 0):
+            if len(domain_name) > 0:
+                domain_name = domain_name + '.'
+            label = buffer[cursor+1:cursor+label_length+1].decode('utf-8')
+            domain_name = domain_name + label
+            cursor = cursor + label_length + 1
+            label_length = buffer[cursor]
+        r_type, d_class = struct.unpack("!HH", buffer[cursor+1:])
+        return cls(domain_name=domain_name, r_type=r_type, d_class=d_class)
+    
 
 @dataclass
 class DNSAnswer:
@@ -93,24 +108,31 @@ class DNSAnswer:
         for val in self.data:
             answer += val.to_bytes(1, byteorder="big")
         return answer
+    
+    @classmethod
+    def respond_to_query(cls, question: DNSQuestion):
+        return cls(domain_name=question.domain_name, data=[8,8,8,8])
 
 @dataclass
 class DNSMessage:
     header: DNSHeader
     question: DNSQuestion
-    answer: DNSAnswer
+    answer: DNSAnswer | None
 
     def to_bytes(self):
-        return self.header.to_bytes() + self.question.to_bytes() + self.answer.to_bytes()
+        if self.answer:
+            return self.header.to_bytes() + self.question.to_bytes() + self.answer.to_bytes()
+        else:
+            return self.header.to_bytes() + self.question.to_bytes()
     
     @classmethod
     def from_buffer(cls, buffer):
-        return cls(header=DNSHeader.from_buffer(buffer), question=DNSQuestion("codecrafters.io"), answer=DNSAnswer("codecrafters.io", [8,8,8,8]))
+        return cls(header=DNSHeader.from_buffer(buffer), question=DNSQuestion.from_bytes(buffer), answer=None)
     
     @classmethod
     def respond_to_query(cls, query):
         # Query is type DNSMessage
-        return cls(header=DNSHeader.respond_to_query(query.header), question=DNSQuestion("codecrafters.io"), answer=DNSAnswer("codecrafters.io", [8,8,8,8]))
+        return cls(header=DNSHeader.respond_to_query(query.header), question=query.question, answer=DNSAnswer.respond_to_query(query.question))
 
 def encode_domain_name(name: str):
     labels = name.split('.')
